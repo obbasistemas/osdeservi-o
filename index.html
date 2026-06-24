@@ -854,25 +854,18 @@
       </div>
 
       <div class="config-card">
-        <h3>🔗 Conexão com Google Sheets</h3>
+        <h3>🔗 Conexão com Google Sheets (Apps Script)</h3>
         <div class="config-info">
-          <strong>Como funciona:</strong> o app lê e escreve diretamente na sua planilha do Google Drive via Google Sheets API. Todas as O.S. criadas aqui aparecem automaticamente na aba <code>REGISTRO</code> da planilha.
+          <strong>Como funciona:</strong> o app lê e escreve na sua planilha usando uma ponte segura do Google Apps Script. Todas as O.S. criadas aqui aparecem automaticamente na aba <code>REGISTRO</code> da planilha.
         </div>
         <div class="form-row" style="margin-bottom:16px">
           <div class="form-col full">
-            <label class="form-label">ID da Planilha Google Sheets</label>
-            <input class="form-control" id="cfgSheetId" placeholder="Ex: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms"
+            <label class="form-label">URL da API do Google Apps Script</label>
+            <input class="form-control" id="cfgScriptUrl" placeholder="Ex: https://script.google.com/macros/s/AKfycb.../exec"
               oninput="salvarConfig()"/>
             <span style="font-size:11px;color:var(--cinza-400);margin-top:4px;display:block">
-              Encontre na URL da planilha: docs.google.com/spreadsheets/d/<strong>[ID AQUI]</strong>/edit
+              Cole a URL gerada na implantação do Apps Script na sua planilha.
             </span>
-          </div>
-        </div>
-        <div class="form-row" style="margin-bottom:16px">
-          <div class="form-col full">
-            <label class="form-label">Google API Key</label>
-            <input class="form-control" id="cfgApiKey" type="password" placeholder="Sua chave de API do Google Cloud"
-              oninput="salvarConfig()"/>
           </div>
         </div>
         <button class="btn btn-primary" onclick="testarConexao()">🔌 Testar Conexão</button>
@@ -882,12 +875,13 @@
       <div class="config-card">
         <h3>📋 Como configurar — passo a passo</h3>
         <ol class="steps-list">
-          <li>Abra o Google Cloud Console em <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a> e crie um projeto.</li>
-          <li>Vá em <strong>APIs e Serviços → Biblioteca</strong> e ative a <strong>Google Sheets API</strong>.</li>
-          <li>Em <strong>APIs e Serviços → Credenciais</strong>, clique em <strong>Criar credenciais → Chave de API</strong>. Copie a chave gerada.</li>
-          <li>Na sua planilha do Google Drive, clique em <strong>Compartilhar</strong> e adicione o e-mail da conta de serviço <em>ou</em> torne a planilha pública com permissão de edição (mais simples para começo).</li>
-          <li>Cole o <strong>ID da planilha</strong> e a <strong>chave de API</strong> nos campos acima e clique em <strong>Testar Conexão</strong>.</li>
-          <li>Pronto! Todas as O.S. criadas aqui serão salvas automaticamente na aba <code>REGISTRO</code> da planilha.</li>
+          <li>Abra a sua planilha do Google Drive.</li>
+          <li>No menu superior, acesse <strong>Extensões ➔ Apps Script</strong>.</li>
+          <li>Apague o código existente e cole o código do script fornecido.</li>
+          <li>No canto superior direito, clique em <strong>Implantar ➔ Nova implantação</strong>.</li>
+          <li>Clique no ícone de engrenagem e selecione <strong>Aplicativo da Web</strong>. Configure "Executar como: Eu" e "Quem tem acesso: Qualquer pessoa".</li>
+          <li>Clique em <strong>Implantar</strong>, autorize as permissões e copie a <strong>URL do aplicativo da Web</strong> gerada.</li>
+          <li>Cole essa URL no campo acima e clique em <strong>Testar Conexão</strong>.</li>
         </ol>
       </div>
 
@@ -959,8 +953,7 @@ let state = {
   user: null,
   perfil: 'zelador',
   ordens: [],
-  sheetId: '',
-  apiKey: '',
+  scriptUrl: '',
   modalIdx: -1,
   connected: false
 };
@@ -991,8 +984,7 @@ function doLogin() {
   state.ordens = JSON.parse(JSON.stringify(DEMO));
 
   // Carregar config salva
-  state.sheetId = localStorage.getItem('toscana_sheetId') || '';
-  state.apiKey  = localStorage.getItem('toscana_apiKey')  || '';
+  state.scriptUrl = localStorage.getItem('toscana_scriptUrl') || '';
 
   document.getElementById('loginOverlay').style.display = 'none';
   document.getElementById('topbar').style.display = 'flex';
@@ -1001,8 +993,7 @@ function doLogin() {
   document.getElementById('cfgNome').value   = nome;
   document.getElementById('cfgPerfil').value = perfilSel === 'sindico' ? '👑 Síndico' :
                                                perfilSel === 'zelador' ? '🔧 Zelador' : '🚪 Porteiro';
-  document.getElementById('cfgSheetId').value = state.sheetId;
-  document.getElementById('cfgApiKey').value  = state.apiKey;
+  document.getElementById('cfgScriptUrl').value = state.scriptUrl;
 
   // Ocultar cancelar OS se não for síndico
   if (perfilSel !== 'sindico') {
@@ -1013,7 +1004,7 @@ function doLogin() {
   navigate('dashboard');
 
   // Tentar sync se já configurado
-  if (state.sheetId && state.apiKey) syncSheets();
+  if (state.scriptUrl) syncSheets();
 }
 function sair() {
   location.reload();
@@ -1304,18 +1295,23 @@ function osToRow(o) {
 }
 
 async function syncSheets() {
-  if (!state.sheetId || !state.apiKey) {
-    toast('Configure o ID da planilha e a API Key primeiro', 'error');
+  if (!state.scriptUrl) {
+    toast('Configure a URL da API do Apps Script primeiro', 'error');
     navigate('config');
     return;
   }
   const dot = document.getElementById('syncDot');
   dot.classList.add('syncing');
   try {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${state.sheetId}/values/${SHEET_NAME}!A3:K?key=${state.apiKey}`;
-    const res = await fetch(url);
+    const res = await fetch(state.scriptUrl, {
+      method: 'POST',
+      mode: 'cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'read' })
+    });
     if (!res.ok) throw new Error('Falha na API: ' + res.status);
     const data = await res.json();
+    if (data.status === 'error') throw new Error(data.message);
     const rows = data.values || [];
     // Converte linhas em objetos
     const ordensSheet = rows
@@ -1361,13 +1357,19 @@ function parseDataBR(s) {
 
 async function appendToSheet(o) {
   try {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${state.sheetId}/values/${SHEET_NAME}!A:K:append?valueInputOption=USER_ENTERED&key=${state.apiKey}`;
-    const res = await fetch(url, {
+    if (!state.scriptUrl) throw new Error('URL da API não configurada');
+    const res = await fetch(state.scriptUrl, {
       method: 'POST',
+      mode: 'cors',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ values: [osToRow(o)] })
+      body: JSON.stringify({
+        action: 'append',
+        row: osToRow(o)
+      })
     });
-    if (!res.ok) throw new Error(res.status);
+    if (!res.ok) throw new Error('Erro HTTP ' + res.status);
+    const data = await res.json();
+    if (data.status !== 'success') throw new Error(data.message || 'Erro desconhecido');
     toast(`O.S. Nº ${fmtNum(o.num)} salva na planilha ✅`, 'success');
   } catch (err) {
     toast('Erro ao salvar na planilha: ' + err.message, 'error');
@@ -1375,26 +1377,20 @@ async function appendToSheet(o) {
 }
 
 async function updateSheetRow(localIdx, o) {
-  // Encontra a linha na planilha pelo número da OS
   try {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${state.sheetId}/values/${SHEET_NAME}!A:A?key=${state.apiKey}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    const rows = data.values || [];
-    // Linha 1 = cabeçalho (row index 0), dados a partir do índice 1
-    const rowIdx = rows.findIndex((r, i) => i > 0 && parseInt(r[0]) === o.num);
-    if (rowIdx < 0) {
-      toast('Linha não encontrada na planilha', 'error');
-      return;
-    }
-    const sheetRow = rowIdx + 1; // 1-based
-    const updUrl = `https://sheets.googleapis.com/v4/spreadsheets/${state.sheetId}/values/${SHEET_NAME}!A${sheetRow}:K${sheetRow}?valueInputOption=USER_ENTERED&key=${state.apiKey}`;
-    const updRes = await fetch(updUrl, {
-      method: 'PUT',
+    if (!state.scriptUrl) throw new Error('URL da API não configurada');
+    const res = await fetch(state.scriptUrl, {
+      method: 'POST',
+      mode: 'cors',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ values: [osToRow(o)] })
+      body: JSON.stringify({
+        action: 'update',
+        row: osToRow(o)
+      })
     });
-    if (!updRes.ok) throw new Error(updRes.status);
+    if (!res.ok) throw new Error('Erro HTTP ' + res.status);
+    const data = await res.json();
+    if (data.status !== 'success') throw new Error(data.message || 'Erro de atualização');
     toast(`O.S. Nº ${fmtNum(o.num)} atualizada na planilha ✅`, 'success');
   } catch (err) {
     toast('Erro ao atualizar planilha: ' + err.message, 'error');
@@ -1405,10 +1401,8 @@ async function updateSheetRow(localIdx, o) {
 //  CONFIG
 // ══════════════════════════════════════════
 function salvarConfig() {
-  state.sheetId = document.getElementById('cfgSheetId').value.trim();
-  state.apiKey = document.getElementById('cfgApiKey').value.trim();
-  localStorage.setItem('toscana_sheetId', state.sheetId);
-  localStorage.setItem('toscana_apiKey', state.apiKey);
+  state.scriptUrl = document.getElementById('cfgScriptUrl').value.trim();
+  localStorage.setItem('toscana_scriptUrl', state.scriptUrl);
 }
 
 async function testarConexao() {
@@ -1417,11 +1411,17 @@ async function testarConexao() {
   el.textContent = '⏱️ Testando…';
   el.style.color = 'var(--cinza-400)';
   try {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${state.sheetId}?key=${state.apiKey}&fields=properties.title`;
-    const res = await fetch(url);
+    if (!state.scriptUrl) throw new Error('A URL da API está vazia.');
+    const res = await fetch(state.scriptUrl, {
+      method: 'POST',
+      mode: 'cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'read' })
+    });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
-    el.textContent = `✅ Conectado! Planilha: "${data.properties?.title || 'sem título'}"`;
+    if (data.status === 'error') throw new Error(data.message);
+    el.textContent = `✅ Conectado com sucesso!`;
     el.style.color = 'var(--verde-esc)';
     state.connected = true;
     document.getElementById('syncDot').style.background = '#69F0AE';
