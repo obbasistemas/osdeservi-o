@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>O.S. – Jardim de Toscana</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap');
+
+  :root {
+    --verde-esc:   #1B5E20;
+    --verde-med:   #2E7D32;
+    --verde-vivo:  #43A047;
+    --verde-claro: #C8E6C9;
+    --verde-bg:    #F1F8E9;
+    --cinza-900:   #212121;
+    --cinza-700:   #424242;
+    --cinza-400:   #9E9E9E;
+    --cinza-100:   #F5F5F5;
+    --branco:      #FFFFFF;
+    --amarelo:     #F9A825;
+    --vermelho:    #C62828;
+    --azul:        #1565C0;
+    --laranja:     #E65100;
+    --radius:      10px;
+    --shadow:      0 2px 12px rgba(0,0,0,.10);
+    --shadow-lg:   0 6px 28px rgba(0,0,0,.14);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #ECEFF1;
+    color: var(--cinza-900);
+    min-height: 100vh;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    background: var(--verde-esc);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  }
+  .topbar-brand { display: flex; align-items: center; gap: 10px; }
+  .topbar-brand .logo {
+    width: 36px; height: 36px;
+    background: var(--verde-vivo);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .topbar-brand h1 { font-size: 15px; font-weight: 700; letter-spacing: .3px; }
+  .topbar-brand span { font-size: 11px; opacity: .7; display: block; font-weight: 400; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .badge-user {
+    background: rgba(255,255,255,.15);
+    border: 1px solid rgba(255,255,255,.25);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .badge-user:hover { background: rgba(255,255,255,.25); }
+  .btn-sync {
+    background: var(--verde-vivo);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    transition: opacity .2s;
+  }
+  .btn-sync:hover { opacity: .85; }
+  .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #69F0AE; }
+  .sync-dot.syncing { animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  /* ── LAYOUT ── */
+  .shell { display: flex; min-height: calc(100vh - 60px); }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px;
+    background: var(--branco);
+    border-right: 1px solid #E0E0E0;
+    padding: 20px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .nav-section { font-size: 10px; font-weight: 700; color: var(--cinza-400);
+    text-transform: uppercase; letter-spacing: 1px; padding: 12px 8px 4px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--cinza-700);
+    transition: all .15s;
+    user-select: none;
+  }
+  .nav-item:hover { background: var(--verde-bg); color: var(--verde-esc); }
+  .nav-item.active { background: var(--verde-claro); color: var(--verde-esc); font-weight: 700; }
+  .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+  .nav-badge {
+    margin-left: auto;
+    background: var(--vermelho);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 20px;
+    text-align: center;
+  }
+
+  /* ── MAIN ── */
+  .main { flex: 1; padding: 28px; overflow-y: auto; }
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .page-title { font-size: 22px; font-weight: 800; color: var(--cinza-900); }
+  .page-sub { font-size: 13px; color: var(--cinza-400); margin-top: 2px; }
+
+  /* ── CARDS RESUMO ── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .card-stat {
+    background: var(--branco);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--verde-vivo);
+    cursor: default;
+  }
+  .card-stat.vermelho { border-left-color: var(--vermelho); }
+  .card-stat.laranja  { border-left-color: var(--laranja); }
+  .card-stat.azul     { border-left-color: var(--azul); }
+  .card-stat.cinza    { border-left-color: var(--cinza-400); }
+  .card-stat .num {
+    font-size: 32px; font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1;
+  }
+  .card-stat.vermelho .num { color: var(--vermelho); }
+  .card-stat.laranja  .num { color: var(--laranja); }
+  .card-stat.azul     .num { color: var(--azul); }
+  .card-stat.cinza    .num { color: var(--cinza-400); }
+  .card-stat          .num { color: var(--verde-esc); }
+  .card-stat .lbl { font-size: 11px; font-weight: 600; color: var(--cinza-400);
+    text-transform: uppercase; letter-spacing: .5px; margin-top: 6px; }
+
+  /* ── TABELA ── */
+  .table-wrap {
+    background: var(--branco);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .table-toolbar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 18px;
+    border-bottom: 1px solid #F0F0F0;
+  }
+  .search-box {
+    flex: 1;
+    display: flex; align-items: center; gap: 8px;
+    background: var(--cinza-100);
+    border-radius: 8px;
+    padding: 0 12px;
+  }
+  .search-box input {
+    flex: 1; border: none; background: transparent;
+    padding: 8px 0; font-size: 13px; outline: none;
+    font-family: 'Inter', sans-serif;
+  }
+  .filter-sel {
+    border: 1px solid #E0E0E0;
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    color: var(--cinza-700);
+    background: var(--branco);
+    cursor: pointer;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: var(--cinza-100);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--cinza-400);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    white-space: nowrap;
+    border-bottom: 1px solid #E0E0E0;
+  }
+  tbody tr {
+    border-bottom: 1px solid #F5F5F5;
+    transition: background .1s;
+    cursor: pointer;
+  }
+  tbody tr:hover { background: var(--verde-bg); }
+  tbody td {
+    padding: 11px 14px;
+    font-size: 13px;
+    color: var(--cinza-700);
+    vertical-align: middle;
+  }
+  .td-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--verde-esc);
+  }
+  .empty-state {
+    text-align: center;
+    padding: 56px 24px;
+    color: var(--cinza-400);
+    font-size: 14px;
+  }
+  .empty-state .emo { font-size: 48px; display: block; margin-bottom: 12px; }
+
+  /* ── CHIPS STATUS ── */
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+    white-space: nowrap;
+  }
+  .chip::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
+  .chip-aberta    { background: #FFF8E1; color: #F57F17; }
+  .chip-aberta::before    { background: #F9A825; }
+  .chip-andamento { background: #E3F2FD; color: #1565C0; }
+  .chip-andamento::before { background: #1976D2; }
+  .chip-concluida { background: #E8F5E9; color: #2E7D32; }
+  .chip-concluida::before { background: #43A047; }
+  .chip-cancelada { background: #FAFAFA; color: #9E9E9E; }
+  .chip-cancelada::before { background: #BDBDBD; }
+
+  .prio-urgente { color: var(--vermelho); font-weight: 700; font-size: 12px; }
+  .prio-alta    { color: var(--laranja);  font-weight: 700; font-size: 12px; }
+  .prio-normal  { color: var(--cinza-700); font-size: 12px; }
+  .prio-baixa   { color: var(--cinza-400); font-size: 12px; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--branco);
+    border-radius: 14px;
+    width: 100%; max-width: 620px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    transform: translateY(20px);
+    transition: transform .2s;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-head {
+    background: var(--verde-esc);
+    color: #fff;
+    padding: 20px 24px;
+    display: flex; align-items: flex-start; justify-content: space-between;
+    border-radius: 14px 14px 0 0;
+  }
+  .modal-head h2 { font-size: 17px; font-weight: 800; }
+  .modal-head p  { font-size: 12px; opacity: .7; margin-top: 3px; }
+  .modal-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 800;
+    background: rgba(255,255,255,.15);
+    padding: 4px 14px;
+    border-radius: 8px;
+    letter-spacing: 2px;
+    margin-left: 16px;
+    flex-shrink: 0;
+  }
+  .modal-body { padding: 24px; }
+  .form-row { display: flex; gap: 14px; margin-bottom: 16px; }
+  .form-col { flex: 1; }
+  .form-col.full { flex: none; width: 100%; }
+  .form-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--cinza-400);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 6px;
+  }
+  .form-control {
+    width: 100%;
+    border: 1.5px solid #E0E0E0;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    color: var(--cinza-900);
+    transition: border-color .15s;
+    background: var(--branco);
+  }
+  .form-control:focus { border-color: var(--verde-vivo); }
+  textarea.form-control { resize: vertical; min-height: 80px; }
+  .form-control[readonly] {
+    background: var(--verde-bg);
+    color: var(--verde-esc);
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+  }
+  .modal-foot {
+    padding: 16px 24px;
+    border-top: 1px solid #F0F0F0;
+    display: flex; gap: 10px; justify-content: flex-end;
+  }
+  .btn { border: none; border-radius: 8px; padding: 10px 20px; font-size: 13px;
+    font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; transition: opacity .15s; }
+  .btn:hover { opacity: .85; }
+  .btn-primary { background: var(--verde-esc); color: #fff; }
+  .btn-ghost   { background: var(--cinza-100); color: var(--cinza-700); }
+  .btn-danger  { background: var(--vermelho); color: #fff; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+  /* ── NOVA OS PAGE ── */
+  .nova-os-card {
+    background: var(--branco);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    max-width: 700px;
+  }
+  .nova-os-head {
+    background: linear-gradient(135deg, var(--verde-esc), var(--verde-med));
+    padding: 24px;
+    color: #fff;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nova-os-head h2 { font-size: 18px; font-weight: 800; }
+  .nova-os-head p  { font-size: 12px; opacity: .75; margin-top: 3px; }
+  .next-num-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 32px;
+    font-weight: 800;
+    background: rgba(255,255,255,.18);
+    padding: 8px 18px;
+    border-radius: 10px;
+    letter-spacing: 3px;
+    border: 2px dashed rgba(255,255,255,.4);
+  }
+  .nova-os-body { padding: 28px; }
+
+  /* ── TIPOS SERVIÇO ── */
+  .tipos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .tipo-btn {
+    border: 2px solid #E0E0E0;
+    border-radius: 10px;
+    padding: 12px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .15s;
+    background: var(--branco);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--cinza-700);
+    user-select: none;
+  }
+  .tipo-btn .t-icon { font-size: 22px; display: block; margin-bottom: 6px; }
+  .tipo-btn:hover { border-color: var(--verde-vivo); color: var(--verde-esc); background: var(--verde-bg); }
+  .tipo-btn.selected { border-color: var(--verde-esc); background: var(--verde-claro); color: var(--verde-esc); }
+
+  /* ── TOAST ── */
+  .toast-wrap {
+    position: fixed; bottom: 24px; right: 24px;
+    display: flex; flex-direction: column; gap: 8px;
+    z-index: 500;
+    pointer-events: none;
+  }
+  .toast {
+    background: var(--cinza-900);
+    color: #fff;
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    animation: slideUp .3s ease;
+    pointer-events: none;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .toast.success { background: var(--verde-esc); }
+  .toast.error   { background: var(--vermelho); }
+  @keyframes slideUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ── CONFIG PAGE ── */
+  .config-card {
+    background: var(--branco);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 28px;
+    max-width: 620px;
+    margin-bottom: 20px;
+  }
+  .config-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 16px;
+    padding-bottom: 10px; border-bottom: 1px solid #F0F0F0; color: var(--cinza-900); }
+  .config-info {
+    background: var(--verde-bg);
+    border: 1px solid var(--verde-claro);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--verde-esc);
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+  .config-info code {
+    background: rgba(0,0,0,.08);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .steps-list { list-style: none; counter-reset: steps; }
+  .steps-list li {
+    counter-increment: steps;
+    display: flex; gap: 14px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    color: var(--cinza-700);
+    line-height: 1.6;
+  }
+  .steps-list li::before {
+    content: counter(steps);
+    background: var(--verde-esc);
+    color: #fff;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .steps-list a { color: var(--azul); }
+
+  /* ── MODAL VER OS ── */
+  .os-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .os-field label { font-size: 10px; font-weight: 700; color: var(--cinza-400);
+    text-transform: uppercase; letter-spacing: .5px; display: block; margin-bottom: 4px; }
+  .os-field .val { font-size: 13px; font-weight: 500; color: var(--cinza-900); }
+  .os-field .val.mono { font-family: 'JetBrains Mono', monospace; font-size: 15px;
+    font-weight: 700; color: var(--verde-esc); }
+  .os-desc-box {
+    background: var(--cinza-100);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--cinza-700);
+    line-height: 1.6;
+    margin-bottom: 18px;
+    min-height: 60px;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 700px) {
+    .sidebar { display: none; }
+    .main { padding: 16px; }
+    .tipos-grid { grid-template-columns: repeat(2, 1fr); }
+    .form-row { flex-direction: column; }
+    .cards-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* ── SCREEN ── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── LOGIN ── */
+  .login-overlay {
+    position: fixed; inset: 0;
+    background: linear-gradient(135deg, var(--verde-esc) 0%, #37474F 100%);
+    z-index: 999;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .login-box {
+    background: var(--branco);
+    border-radius: 16px;
+    padding: 40px;
+    width: 360px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    text-align: center;
+  }
+  .login-logo { font-size: 48px; margin-bottom: 8px; }
+  .login-box h2 { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+  .login-box p  { font-size: 13px; color: var(--cinza-400); margin-bottom: 28px; }
+  .login-box .form-control { margin-bottom: 12px; text-align: left; }
+  .btn-login { width: 100%; padding: 12px; font-size: 14px; margin-top: 4px; }
+  .login-perfis { display: flex; gap: 8px; margin-bottom: 20px; }
+  .perfil-btn {
+    flex: 1; padding: 8px; border-radius: 8px; border: 2px solid #E0E0E0;
+    font-size: 12px; font-weight: 700; cursor: pointer; transition: all .15s;
+    background: var(--branco); color: var(--cinza-700);
+  }
+  .perfil-btn.sel { border-color: var(--verde-esc); background: var(--verde-bg); color: var(--verde-esc); }
+  .login-demo { font-size: 11px; color: var(--cinza-400); margin-top: 16px; }
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <div class="login-logo">🏢</div>
+    <h2>Jardim de Toscana</h2>
+    <p>Sistema de Ordens de Serviço</p>
+
+    <div class="login-perfis">
+      <button class="perfil-btn sel" onclick="selPerfil('sindico', this)">👑 Síndico</button>
+      <button class="perfil-btn" onclick="selPerfil('zelador', this)">🔧 Zelador</button>
+      <button class="perfil-btn" onclick="selPerfil('porteiro', this)">🚪 Porteiro</button>
+    </div>
+
+    <input class="form-control" id="loginNome" type="text" placeholder="Seu nome" value="Administrador"/>
+    <input class="form-control" id="loginSenha" type="password" placeholder="Senha" value="1234"/>
+    <button class="btn btn-primary btn-login" onclick="doLogin()">Entrar no Sistema</button>
+    <p class="login-demo">Demonstração: qualquer senha funciona neste modo</p>
+  </div>
+</div>
+
+<!-- ══ TOPBAR ══ -->
+<div class="topbar" id="topbar" style="display:none">
+  <div class="topbar-brand">
+    <div class="logo">🏢</div>
+    <div>
+      <h1>Jardim de Toscana</h1>
+      <span>Sistema de Ordens de Serviço</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <button class="btn-sync" onclick="syncSheets()" id="btnSync">
+      <span class="sync-dot" id="syncDot"></span>
+      Sincronizar Planilha
+    </button>
+    <div class="badge-user" id="badgeUser" onclick="navigate('config')">👤 —</div>
+  </div>
+</div>
+
+<!-- ══ SHELL ══ -->
+<div class="shell" id="shell" style="display:none">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <span class="nav-section">Principal</span>
+    <div class="nav-item active" id="nav-dashboard" onclick="navigate('dashboard')">
+      <span class="icon">📊</span> Painel
+    </div>
+    <div class="nav-item" id="nav-nova" onclick="navigate('nova')">
+      <span class="icon">➕</span> Nova O.S.
+    </div>
+    <div class="nav-item" id="nav-registro" onclick="navigate('registro')">
+      <span class="icon">📋</span> Registro
+      <span class="nav-badge" id="badgeAbertas" style="display:none">0</span>
+    </div>
+    <span class="nav-section">Sistema</span>
+    <div class="nav-item" id="nav-config" onclick="navigate('config')">
+      <span class="icon">⚙️</span> Configuração
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ── DASHBOARD ── -->
+    <div class="screen active" id="screen-dashboard">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Painel Geral</div>
+          <div class="page-sub" id="dashSub">Carregando dados…</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="navigate('nova')">+ Nova O.S.</button>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card-stat">
+          <div class="num" id="statTotal">—</div>
+          <div class="lbl">Total de O.S.</div>
+        </div>
+        <div class="card-stat vermelho">
+          <div class="num" id="statAbertas">—</div>
+          <div class="lbl">Abertas</div>
+        </div>
+        <div class="card-stat laranja">
+          <div class="num" id="statAndamento">—</div>
+          <div class="lbl">Em andamento</div>
+        </div>
+        <div class="card-stat">
+          <div class="num" id="statConcluidas">—</div>
+          <div class="lbl">Concluídas</div>
+        </div>
+        <div class="card-stat cinza">
+          <div class="num" id="statCanceladas">—</div>
+          <div class="lbl">Canceladas</div>
+        </div>
+        <div class="card-stat azul">
+          <div class="num" id="statProxNum" style="font-size:24px">—</div>
+          <div class="lbl">Próxima O.S.</div>
+        </div>
+      </div>
+
+      <!-- Recentes -->
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <span style="font-size:14px;font-weight:700;color:var(--cinza-900)">Ordens Recentes</span>
+          <button class="btn btn-ghost btn-sm" onclick="navigate('registro')" style="margin-left:auto">Ver todas →</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Nº</th><th>Data</th><th>Tipo</th><th>Solicitante</th><th>Prioridade</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyRecentes">
+            <tr><td colspan="6" class="empty-state"><span class="emo">📭</span>Sem dados ainda. Crie a primeira O.S.!</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── NOVA O.S. ── -->
+    <div class="screen" id="screen-nova">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Nova Ordem de Serviço</div>
+          <div class="page-sub">Preencha os campos abaixo e salve para registrar na planilha</div>
+        </div>
+      </div>
+
+      <div class="nova-os-card">
+        <div class="nova-os-head">
+          <div>
+            <h2>Ordem de Serviço</h2>
+            <p>Condomínio Jardim de Toscana</p>
+          </div>
+          <div class="next-num-badge" id="nextNumBadge">—</div>
+        </div>
+        <div class="nova-os-body">
+
+          <!-- Tipos -->
+          <label class="form-label">Tipo de Serviço <span style="color:var(--vermelho)">*</span></label>
+          <div class="tipos-grid" id="tiposGrid">
+            <div class="tipo-btn" data-tipo="Manutenção de Elevadores" onclick="selTipo(this)">
+              <span class="t-icon">🔧</span>Manutenção de Elevadores
+            </div>
+            <div class="tipo-btn" data-tipo="Manutenção Elétrica" onclick="selTipo(this)">
+              <span class="t-icon">⚡</span>Manutenção Elétrica
+            </div>
+            <div class="tipo-btn" data-tipo="Obras e Reformas" onclick="selTipo(this)">
+              <span class="t-icon">🔨</span>Obras e Reformas
+            </div>
+            <div class="tipo-btn" data-tipo="Manutenção de Jardim" onclick="selTipo(this)">
+              <span class="t-icon">🌿</span>Manutenção de Jardim
+            </div>
+            <div class="tipo-btn" data-tipo="Manutenção Hidráulica" onclick="selTipo(this)">
+              <span class="t-icon">🚿</span>Manutenção Hidráulica
+            </div>
+            <div class="tipo-btn" data-tipo="Segurança / Portaria" onclick="selTipo(this)">
+              <span class="t-icon">🔒</span>Segurança / Portaria
+            </div>
+            <div class="tipo-btn" data-tipo="Manutenção da Piscina" onclick="selTipo(this)">
+              <span class="t-icon">🏊</span>Manutenção da Piscina
+            </div>
+            <div class="tipo-btn" data-tipo="Limpeza e Conservação" onclick="selTipo(this)">
+              <span class="t-icon">🧹</span>Limpeza e Conservação
+            </div>
+            <div class="tipo-btn" data-tipo="Outros Serviços" onclick="selTipo(this)">
+              <span class="t-icon">⚙️</span>Outros Serviços
+            </div>
+          </div>
+          <input type="hidden" id="fTipo"/>
+
+          <div class="form-row">
+            <div class="form-col">
+              <label class="form-label">Nº da O.S.</label>
+              <input class="form-control" id="fNum" readonly/>
+            </div>
+            <div class="form-col">
+              <label class="form-label">Data</label>
+              <input class="form-control" id="fData" type="date"/>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-col">
+              <label class="form-label">Solicitante <span style="color:var(--vermelho)">*</span></label>
+              <input class="form-control" id="fSolicitante" placeholder="Nome do solicitante"/>
+            </div>
+            <div class="form-col">
+              <label class="form-label">Unidade / Apartamento</label>
+              <input class="form-control" id="fUnidade" placeholder="Ex: 101, Adm, Sub"/>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-col full">
+              <label class="form-label">Empresa / Prestador de Serviço</label>
+              <input class="form-control" id="fEmpresa" placeholder="Nome da empresa ou prestador"/>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-col full">
+              <label class="form-label">Descrição do Serviço <span style="color:var(--vermelho)">*</span></label>
+              <textarea class="form-control" id="fDescricao" rows="3" placeholder="Descreva detalhadamente o serviço a ser executado…"></textarea>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-col">
+              <label class="form-label">Prioridade</label>
+              <select class="form-control" id="fPrioridade">
+                <option>NORMAL</option>
+                <option>URGENTE</option>
+                <option>ALTA</option>
+                <option>BAIXA</option>
+              </select>
+            </div>
+            <div class="form-col">
+              <label class="form-label">Responsável</label>
+              <input class="form-control" id="fResponsavel" placeholder="Quem vai acompanhar"/>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-col full">
+              <label class="form-label">Observações</label>
+              <textarea class="form-control" id="fObs" rows="2" placeholder="Observações adicionais…"></textarea>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+            <button class="btn btn-ghost" onclick="limparForm()">Limpar</button>
+            <button class="btn btn-primary" onclick="salvarOS()">💾 Salvar O.S. na Planilha</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REGISTRO ── -->
+    <div class="screen" id="screen-registro">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Registro de Ordens</div>
+          <div class="page-sub">Todas as O.S. armazenadas na planilha do Google Drive</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="navigate('nova')">+ Nova O.S.</button>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <div class="search-box">
+            <span>🔍</span>
+            <input id="searchInput" placeholder="Buscar por número, tipo, solicitante…" oninput="filtrarTabela()"/>
+          </div>
+          <select class="filter-sel" id="filtroStatus" onchange="filtrarTabela()">
+            <option value="">Todos os status</option>
+            <option>ABERTA</option>
+            <option>EM ANDAMENTO</option>
+            <option>CONCLUÍDA</option>
+            <option>CANCELADA</option>
+          </select>
+          <select class="filter-sel" id="filtroTipo" onchange="filtrarTabela()">
+            <option value="">Todos os tipos</option>
+            <option>Manutenção de Elevadores</option>
+            <option>Manutenção Elétrica</option>
+            <option>Obras e Reformas</option>
+            <option>Manutenção de Jardim</option>
+            <option>Manutenção Hidráulica</option>
+            <option>Segurança / Portaria</option>
+            <option>Manutenção da Piscina</option>
+            <option>Limpeza e Conservação</option>
+            <option>Outros Serviços</option>
+          </select>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Nº</th><th>Data</th><th>Tipo</th><th>Descrição</th>
+              <th>Solicitante</th><th>Prioridade</th><th>Status</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="tbodyRegistro">
+            <tr><td colspan="8" class="empty-state"><span class="emo">📭</span>Nenhuma O.S. encontrada</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── CONFIG ── -->
+    <div class="screen" id="screen-config">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Configuração</div>
+          <div class="page-sub">Conecte o app à sua planilha no Google Drive</div>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <h3>🔗 Conexão com Google Sheets</h3>
+        <div class="config-info">
+          <strong>Como funciona:</strong> o app lê e escreve diretamente na sua planilha do Google Drive via Google Sheets API. Todas as O.S. criadas aqui aparecem automaticamente na aba <code>REGISTRO</code> da planilha.
+        </div>
+        <div class="form-row" style="margin-bottom:16px">
+          <div class="form-col full">
+            <label class="form-label">ID da Planilha Google Sheets</label>
+            <input class="form-control" id="cfgSheetId" placeholder="Ex: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms"
+              oninput="salvarConfig()"/>
+            <span style="font-size:11px;color:var(--cinza-400);margin-top:4px;display:block">
+              Encontre na URL da planilha: docs.google.com/spreadsheets/d/<strong>[ID AQUI]</strong>/edit
+            </span>
+          </div>
+        </div>
+        <div class="form-row" style="margin-bottom:16px">
+          <div class="form-col full">
+            <label class="form-label">Google API Key</label>
+            <input class="form-control" id="cfgApiKey" type="password" placeholder="Sua chave de API do Google Cloud"
+              oninput="salvarConfig()"/>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="testarConexao()">🔌 Testar Conexão</button>
+        <span id="connStatus" style="margin-left:12px;font-size:13px;font-weight:600"></span>
+      </div>
+
+      <div class="config-card">
+        <h3>📋 Como configurar — passo a passo</h3>
+        <ol class="steps-list">
+          <li>Abra o Google Cloud Console em <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a> e crie um projeto.</li>
+          <li>Vá em <strong>APIs e Serviços → Biblioteca</strong> e ative a <strong>Google Sheets API</strong>.</li>
+          <li>Em <strong>APIs e Serviços → Credenciais</strong>, clique em <strong>Criar credenciais → Chave de API</strong>. Copie a chave gerada.</li>
+          <li>Na sua planilha do Google Drive, clique em <strong>Compartilhar</strong> e adicione o e-mail da conta de serviço <em>ou</em> torne a planilha pública com permissão de edição (mais simples para começo).</li>
+          <li>Cole o <strong>ID da planilha</strong> e a <strong>chave de API</strong> nos campos acima e clique em <strong>Testar Conexão</strong>.</li>
+          <li>Pronto! Todas as O.S. criadas aqui serão salvas automaticamente na aba <code>REGISTRO</code> da planilha.</li>
+        </ol>
+      </div>
+
+      <div class="config-card">
+        <h3>👤 Usuário Atual</h3>
+        <div class="form-row">
+          <div class="form-col">
+            <label class="form-label">Nome</label>
+            <input class="form-control" id="cfgNome" readonly/>
+          </div>
+          <div class="form-col">
+            <label class="form-label">Perfil</label>
+            <input class="form-control" id="cfgPerfil" readonly/>
+          </div>
+        </div>
+        <button class="btn btn-ghost" onclick="sair()">Sair do Sistema</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══ MODAL VER/EDITAR OS ══ -->
+<div class="modal-overlay" id="modalOverlay" onclick="fecharModal(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h2 id="modalTitulo">Ordem de Serviço</h2>
+        <p id="modalSub">Detalhes e atualização de status</p>
+      </div>
+      <div class="modal-num" id="modalNum">—</div>
+    </div>
+    <div class="modal-body">
+      <div class="os-detail-grid">
+        <div class="os-field"><label>Data</label><div class="val" id="dData">—</div></div>
+        <div class="os-field"><label>Tipo de Serviço</label><div class="val" id="dTipo">—</div></div>
+        <div class="os-field"><label>Solicitante</label><div class="val" id="dSolicitante">—</div></div>
+        <div class="os-field"><label>Unidade / Apt</label><div class="val" id="dUnidade">—</div></div>
+        <div class="os-field"><label>Empresa / Prestador</label><div class="val" id="dEmpresa">—</div></div>
+        <div class="os-field"><label>Responsável</label><div class="val" id="dResponsavel">—</div></div>
+        <div class="os-field"><label>Prioridade</label><div class="val" id="dPrioridade">—</div></div>
+        <div class="os-field"><label>Status Atual</label>
+          <select class="form-control" id="dStatus" style="margin-top:0;padding:5px 8px;font-size:12px"></select>
+        </div>
+      </div>
+      <div style="margin-bottom:10px"><label class="form-label">Descrição</label>
+        <div class="os-desc-box" id="dDescricao">—</div>
+      </div>
+      <div><label class="form-label">Observações</label>
+        <textarea class="form-control" id="dObs" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger btn-sm" id="btnCancelarOS" onclick="cancelarOS()">Cancelar O.S.</button>
+      <button class="btn btn-ghost" onclick="fecharModal()">Fechar</button>
+      <button class="btn btn-primary" onclick="atualizarStatus()">💾 Salvar Alterações</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOASTS ══ -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+// ══════════════════════════════════════════
+//  ESTADO GLOBAL
+// ══════════════════════════════════════════
+let state = {
+  user: null,
+  perfil: 'zelador',
+  ordens: [],
+  sheetId: '',
+  apiKey: '',
+  modalIdx: -1,
+  connected: false
+};
+
+// ── Dados demo (persistem em memória enquanto não há planilha conectada)
+const DEMO = [
+  {num:1,  data:'2026-01-05', tipo:'Manutenção de Elevadores', descricao:'Revisão semestral elevador bloco A', solicitante:'Síndico',      unidade:'Adm',  empresa:'Elevadores Alfa Ltda', prioridade:'NORMAL',  status:'CONCLUÍDA', obs:'', responsavel:'João Silva'},
+  {num:2,  data:'2026-01-10', tipo:'Manutenção Elétrica',       descricao:'Troca de disjuntores quadro geral',  solicitante:'Zelador',      unidade:'Adm',  empresa:'Elétrica Beta',         prioridade:'ALTA',    status:'CONCLUÍDA', obs:'', responsavel:'Pedro Costa'},
+  {num:3,  data:'2026-02-15', tipo:'Limpeza e Conservação',     descricao:'Limpeza caixa d\'água',              solicitante:'Moradora 101', unidade:'101',  empresa:'Higiene Total',         prioridade:'NORMAL',  status:'CONCLUÍDA', obs:'', responsavel:'Maria Luz'},
+  {num:4,  data:'2026-03-20', tipo:'Manutenção Hidráulica',     descricao:'Vazamento encanamento subsolo',      solicitante:'Porteiro',     unidade:'Sub',  empresa:'Hidro Serviços',        prioridade:'URGENTE', status:'CONCLUÍDA', obs:'', responsavel:'Carlos Mota'},
+  {num:5,  data:'2026-04-02', tipo:'Manutenção de Jardim',      descricao:'Poda árvores área comum',            solicitante:'Síndico',      unidade:'Área', empresa:'Verde Paisagismo',      prioridade:'BAIXA',   status:'ABERTA',    obs:'', responsavel:'Ana Jardim'},
+  {num:6,  data:'2026-05-10', tipo:'Manutenção de Elevadores',  descricao:'Troca cabo de aço elevador B',       solicitante:'Zelador',      unidade:'Adm',  empresa:'',                      prioridade:'URGENTE', status:'ABERTA',    obs:'Urgente! Elevador parado.', responsavel:''},
+];
+
+// ══════════════════════════════════════════
+//  LOGIN
+// ══════════════════════════════════════════
+let perfilSel = 'sindico';
+function selPerfil(p, btn) {
+  perfilSel = p;
+  document.querySelectorAll('.perfil-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+function doLogin() {
+  const nome = document.getElementById('loginNome').value.trim() || 'Usuário';
+  state.user   = nome;
+  state.perfil = perfilSel;
+  state.ordens = JSON.parse(JSON.stringify(DEMO));
+
+  // Carregar config salva
+  state.sheetId = localStorage.getItem('toscana_sheetId') || '';
+  state.apiKey  = localStorage.getItem('toscana_apiKey')  || '';
+
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('topbar').style.display = 'flex';
+  document.getElementById('shell').style.display  = 'flex';
+  document.getElementById('badgeUser').textContent = '👤 ' + nome;
+  document.getElementById('cfgNome').value   = nome;
+  document.getElementById('cfgPerfil').value = perfilSel === 'sindico' ? '👑 Síndico' :
+                                               perfilSel === 'zelador' ? '🔧 Zelador' : '🚪 Porteiro';
+  document.getElementById('cfgSheetId').value = state.sheetId;
+  document.getElementById('cfgApiKey').value  = state.apiKey;
+
+  // Ocultar cancelar OS se não for síndico
+  if (perfilSel !== 'sindico') {
+    document.getElementById('btnCancelarOS').style.display = 'none';
+  }
+
+  atualizarUI();
+  navigate('dashboard');
+
+  // Tentar sync se já configurado
+  if (state.sheetId && state.apiKey) syncSheets();
+}
+function sair() {
+  location.reload();
+}
+
+// ══════════════════════════════════════════
+//  NAVEGAÇÃO
+// ══════════════════════════════════════════
+function navigate(page) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('screen-' + page).classList.add('active');
+  const nav = document.getElementById('nav-' + page);
+  if (nav) nav.classList.add('active');
+  if (page === 'nova')      initNovaOS();
+  if (page === 'registro')  renderTabela();
+  if (page === 'dashboard') renderDashboard();
+}
+
+// ══════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════
+function proximoNum() {
+  if (!state.ordens.length) return 1;
+  return Math.max(...state.ordens.map(o => o.num)) + 1;
+}
+function fmtNum(n) { return String(n).padStart(3, '0'); }
+function fmtData(d) {
+  if (!d) return '—';
+  const [a,m,dia] = d.split('-');
+  return `${dia}/${m}/${a}`;
+}
+function today() {
+  return new Date().toISOString().split('T')[0];
+}
+function chipStatus(s) {
+  const map = {
+    'ABERTA':       'chip-aberta',
+    'EM ANDAMENTO': 'chip-andamento',
+    'CONCLUÍDA':    'chip-concluida',
+    'CANCELADA':    'chip-cancelada',
+  };
+  return `<span class="chip ${map[s]||'chip-aberta'}">${s}</span>`;
+}
+function prioHtml(p) {
+  const map = {URGENTE:'prio-urgente',ALTA:'prio-alta',NORMAL:'prio-normal',BAIXA:'prio-baixa'};
+  return `<span class="${map[p]||'prio-normal'}">● ${p}</span>`;
+}
+
+// ══════════════════════════════════════════
+//  DASHBOARD
+// ══════════════════════════════════════════
+function atualizarUI() {
+  const ordens = state.ordens;
+  const total      = ordens.length;
+  const abertas    = ordens.filter(o => o.status === 'ABERTA').length;
+  const andamento  = ordens.filter(o => o.status === 'EM ANDAMENTO').length;
+  const concluidas = ordens.filter(o => o.status === 'CONCLUÍDA').length;
+  const canceladas = ordens.filter(o => o.status === 'CANCELADA').length;
+  const proxNum    = fmtNum(proximoNum());
+
+  document.getElementById('statTotal').textContent     = total;
+  document.getElementById('statAbertas').textContent   = abertas;
+  document.getElementById('statAndamento').textContent  = andamento;
+  document.getElementById('statConcluidas').textContent = concluidas;
+  document.getElementById('statCanceladas').textContent = canceladas;
+  document.getElementById('statProxNum').textContent    = proxNum;
+  document.getElementById('nextNumBadge').textContent   = proxNum;
+  document.getElementById('fNum').value                 = proxNum;
+
+  const badge = document.getElementById('badgeAbertas');
+  if (abertas > 0) { badge.style.display = ''; badge.textContent = abertas; }
+  else { badge.style.display = 'none'; }
+}
+
+function renderDashboard() {
+  atualizarUI();
+  const now = new Date();
+  document.getElementById('dashSub').textContent =
+    `Atualizado em ${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})}` +
+    (state.connected ? ' · Conectado ao Google Sheets ✅' : ' · Modo local (sem planilha conectada)');
+
+  const tbody = document.getElementById('tbodyRecentes');
+  const recentes = [...state.ordens].reverse().slice(0, 6);
+  if (!recentes.length) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><span class="emo">📭</span>Sem dados. Crie a primeira O.S.!</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = recentes.map((o,i) => `
+    <tr onclick="abrirModal(${state.ordens.length - 1 - i})">
+      <td class="td-num">${fmtNum(o.num)}</td>
+      <td>${fmtData(o.data)}</td>
+      <td>${o.tipo}</td>
+      <td>${o.solicitante}</td>
+      <td>${prioHtml(o.prioridade)}</td>
+      <td>${chipStatus(o.status)}</td>
+    </tr>`).join('');
+}
+
+// ══════════════════════════════════════════
+//  NOVA O.S.
+// ══════════════════════════════════════════
+function initNovaOS() {
+  atualizarUI();
+  document.getElementById('fData').value = today();
+  if (state.user) document.getElementById('fSolicitante').value = state.user;
+}
+function selTipo(btn) {
+  document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('fTipo').value = btn.dataset.tipo;
+}
+function limparForm() {
+  document.getElementById('fTipo').value = '';
+  document.getElementById('fSolicitante').value = '';
+  document.getElementById('fUnidade').value = '';
+  document.getElementById('fEmpresa').value = '';
+  document.getElementById('fDescricao').value = '';
+  document.getElementById('fObs').value = '';
+  document.getElementById('fResponsavel').value = '';
+  document.getElementById('fPrioridade').value = 'NORMAL';
+  document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('selected'));
+  initNovaOS();
+}
+function salvarOS() {
+  const tipo       = document.getElementById('fTipo').value;
+  const solicitante= document.getElementById('fSolicitante').value.trim();
+  const descricao  = document.getElementById('fDescricao').value.trim();
+  if (!tipo)        { toast('Selecione o tipo de serviço', 'error'); return; }
+  if (!solicitante) { toast('Informe o solicitante', 'error'); return; }
+  if (!descricao)   { toast('Informe a descrição do serviço', 'error'); return; }
+
+  const nova = {
+    num:         proximoNum(),
+    data:        document.getElementById('fData').value || today(),
+    tipo,
+    descricao,
+    solicitante,
+    unidade:     document.getElementById('fUnidade').value.trim(),
+    empresa:     document.getElementById('fEmpresa').value.trim(),
+    prioridade:  document.getElementById('fPrioridade').value,
+    status:      'ABERTA',
+    obs:         document.getElementById('fObs').value.trim(),
+    responsavel: document.getElementById('fResponsavel').value.trim(),
+  };
+
+  state.ordens.push(nova);
+  atualizarUI();
+
+  // Salva na planilha se conectado
+  if (state.connected) {
+    appendToSheet(nova);
+  } else {
+    toast(`O.S. Nº ${fmtNum(nova.num)} criada (modo local)`, 'success');
+  }
+
+  limparForm();
+  navigate('registro');
+}
+
+// ══════════════════════════════════════════
+//  TABELA REGISTRO
+// ══════════════════════════════════════════
+function renderTabela(filtro) {
+  let ordens = [...state.ordens].reverse();
+  const busca  = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  const status = document.getElementById('filtroStatus')?.value || '';
+  const tipo   = document.getElementById('filtroTipo')?.value   || '';
+
+  if (busca)  ordens = ordens.filter(o =>
+    fmtNum(o.num).includes(busca) ||
+    o.tipo.toLowerCase().includes(busca) ||
+    o.solicitante.toLowerCase().includes(busca) ||
+    o.descricao.toLowerCase().includes(busca)
+  );
+  if (status) ordens = ordens.filter(o => o.status === status);
+  if (tipo)   ordens = ordens.filter(o => o.tipo   === tipo);
+
+  const tbody = document.getElementById('tbodyRegistro');
+  if (!ordens.length) {
+    tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><span class="emo">🔍</span>Nenhuma O.S. encontrada</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = ordens.map(o => {
+    const idx = state.ordens.findIndex(x => x.num === o.num);
+    return `<tr onclick="abrirModal(${idx})">
+      <td class="td-num">${fmtNum(o.num)}</td>
+      <td>${fmtData(o.data)}</td>
+      <td style="font-size:12px">${o.tipo}</td>
+      <td style="font-size:12px;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.descricao}</td>
+      <td>${o.solicitante}</td>
+      <td>${prioHtml(o.prioridade)}</td>
+      <td>${chipStatus(o.status)}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();abrirModal(${idx})">Ver →</button></td>
+    </tr>`;
+  }).join('');
+}
+function filtrarTabela() { renderTabela(); }
+
+// ══════════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════════
+function abrirModal(idx) {
+  state.modalIdx = idx;
+  const o = state.ordens[idx];
+  document.getElementById('modalNum').textContent      = fmtNum(o.num);
+  document.getElementById('modalTitulo').textContent   = o.tipo;
+  document.getElementById('modalSub').textContent      = `Criada em ${fmtData(o.data)}`;
+  document.getElementById('dData').textContent         = fmtData(o.data);
+  document.getElementById('dTipo').textContent         = o.tipo;
+  document.getElementById('dSolicitante').textContent  = o.solicitante || '—';
+  document.getElementById('dUnidade').textContent      = o.unidade     || '—';
+  document.getElementById('dEmpresa').textContent      = o.empresa     || '—';
+  document.getElementById('dResponsavel').textContent  = o.responsavel || '—';
+  document.getElementById('dPrioridade').innerHTML     = prioHtml(o.prioridade);
+  document.getElementById('dDescricao').textContent    = o.descricao   || '—';
+  document.getElementById('dObs').value                = o.obs         || '';
+
+  const sel = document.getElementById('dStatus');
+  sel.innerHTML = ['ABERTA','EM ANDAMENTO','CONCLUÍDA','CANCELADA']
+    .map(s => `<option ${s===o.status?'selected':''}>${s}</option>`).join('');
+
+  // Porteiro só pode ver, não editar status
+  if (state.perfil === 'porteiro') {
+    sel.disabled = true;
+    document.getElementById('dObs').readOnly = true;
+  } else {
+    sel.disabled = false;
+    document.getElementById('dObs').readOnly = false;
+  }
+
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function fecharModal(e) {
+  if (!e || e.target === document.getElementById('modalOverlay')) {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+}
+function atualizarStatus() {
+  if (state.modalIdx < 0) return;
+  const o = state.ordens[state.modalIdx];
+  o.status = document.getElementById('dStatus').value;
+  o.obs = document.getElementById('dObs').value;
+  atualizarUI();
+  renderTabela();
+  if (state.connected) {
+    updateSheetRow(state.modalIdx, o);
+  } else {
+    toast(`O.S. Nº ${fmtNum(o.num)} atualizada`, 'success');
+  }
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+function cancelarOS() {
+  if (state.modalIdx < 0 || state.perfil !== 'sindico') return;
+  const o = state.ordens[state.modalIdx];
+  if (!confirm(`Cancelar a O.S. Nº ${fmtNum(o.num)}?`)) return;
+  o.status = 'CANCELADA';
+  atualizarUI();
+  renderTabela();
+  if (state.connected) {
+    updateSheetRow(state.modalIdx, o);
+  } else {
+    toast(`O.S. Nº ${fmtNum(o.num)} cancelada`, 'error');
+  }
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+// ══════════════════════════════════════════
+//  GOOGLE SHEETS API
+// ══════════════════════════════════════════
+const SHEET_NAME = 'REGISTRO';
+// Colunas: Nº|Data|Tipo|Descrição|Solicitante|Unidade|Empresa|Prioridade|Status|Obs|Responsável
+
+function osToRow(o) {
+  return [
+    fmtNum(o.num),
+    fmtData(o.data),
+    o.tipo,
+    o.descricao,
+    o.solicitante,
+    o.unidade,
+    o.empresa,
+    o.prioridade,
+    o.status,
+    o.obs,
+    o.responsavel
+  ];
+}
+
+async function syncSheets() {
+  if (!state.sheetId || !state.apiKey) {
+    toast('Configure o ID da planilha e a API Key primeiro', 'error');
+    navigate('config');
+    return;
+  }
+  const dot = document.getElementById('syncDot');
+  dot.classList.add('syncing');
+  try {
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${state.sheetId}/values/${SHEET_NAME}!A3:K?key=${state.apiKey}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Falha na API: ' + res.status);
+    const data = await res.json();
+    const rows = data.values || [];
+    // Converte linhas em objetos
+    const ordensSheet = rows
+      .filter(r => r[0] && !isNaN(parseInt(r[0])))
+      .map(r => ({
+        num: parseInt(r[0]) || 0,
+        data: parseDataBR(r[1] || ''),
+        tipo: r[2] || '',
+        descricao: r[3] || '',
+        solicitante: r[4] || '',
+        unidade: r[5] || '',
+        empresa: r[6] || '',
+        prioridade: r[7] || 'NORMAL',
+        status: r[8] || 'ABERTA',
+        obs: r[9] || '',
+        responsavel: r[10] || ''
+      }));
+
+    if (ordensSheet.length > 0) {
+      state.ordens = ordensSheet;
+    }
+    state.connected = true;
+    dot.classList.remove('syncing');
+    dot.style.background = '#69F0AE';
+    toast(`Sincronizado! ${state.ordens.length} O.S. carregadas da planilha ✅`, 'success');
+    atualizarUI();
+    renderDashboard();
+  } catch (err) {
+    state.connected = false;
+    dot.classList.remove('syncing');
+    dot.style.background = '#FF5252';
+    toast('Erro ao conectar: ' + err.message, 'error');
+  }
+}
+
+function parseDataBR(s) {
+  // DD/MM/YYYY → YYYY-MM-DD
+  if (!s) return '';
+  const p = s.split('/');
+  if (p.length === 3) return `${p[2]}-${p[1]}-${p[0]}`;
+  return s;
+}
+
+async function appendToSheet(o) {
+  try {
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${state.sheetId}/values/${SHEET_NAME}!A:K:append?valueInputOption=USER_ENTERED&key=${state.apiKey}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ values: [osToRow(o)] })
+    });
+    if (!res.ok) throw new Error(res.status);
+    toast(`O.S. Nº ${fmtNum(o.num)} salva na planilha ✅`, 'success');
+  } catch (err) {
+    toast('Erro ao salvar na planilha: ' + err.message, 'error');
+  }
+}
+
+async function updateSheetRow(localIdx, o) {
+  // Encontra a linha na planilha pelo número da OS
+  try {
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${state.sheetId}/values/${SHEET_NAME}!A:A?key=${state.apiKey}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const rows = data.values || [];
+    // Linha 1 = cabeçalho (row index 0), dados a partir do índice 1
+    const rowIdx = rows.findIndex((r, i) => i > 0 && parseInt(r[0]) === o.num);
+    if (rowIdx < 0) {
+      toast('Linha não encontrada na planilha', 'error');
+      return;
+    }
+    const sheetRow = rowIdx + 1; // 1-based
+    const updUrl = `https://sheets.googleapis.com/v4/spreadsheets/${state.sheetId}/values/${SHEET_NAME}!A${sheetRow}:K${sheetRow}?valueInputOption=USER_ENTERED&key=${state.apiKey}`;
+    const updRes = await fetch(updUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ values: [osToRow(o)] })
+    });
+    if (!updRes.ok) throw new Error(updRes.status);
+    toast(`O.S. Nº ${fmtNum(o.num)} atualizada na planilha ✅`, 'success');
+  } catch (err) {
+    toast('Erro ao atualizar planilha: ' + err.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════
+function salvarConfig() {
+  state.sheetId = document.getElementById('cfgSheetId').value.trim();
+  state.apiKey = document.getElementById('cfgApiKey').value.trim();
+  localStorage.setItem('toscana_sheetId', state.sheetId);
+  localStorage.setItem('toscana_apiKey', state.apiKey);
+}
+
+async function testarConexao() {
+  salvarConfig();
+  const el = document.getElementById('connStatus');
+  el.textContent = '⏱️ Testando…';
+  el.style.color = 'var(--cinza-400)';
+  try {
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${state.sheetId}?key=${state.apiKey}&fields=properties.title`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    el.textContent = `✅ Conectado! Planilha: "${data.properties?.title || 'sem título'}"`;
+    el.style.color = 'var(--verde-esc)';
+    state.connected = true;
+    document.getElementById('syncDot').style.background = '#69F0AE';
+    await syncSheets();
+  } catch (err) {
+    el.textContent = '❌ Erro: ' + err.message;
+    el.style.color = 'var(--vermelho)';
+    state.connected = false;
+  }
+}
+
+// ══════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════
+function toast(msg, type = '') {
+  const w = document.getElementById('toastWrap');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  w.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+// ── Fechar modal com ESC
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') fecharModal();
+});
+</script>
+</body>
+</html>
