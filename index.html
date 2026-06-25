@@ -1294,6 +1294,15 @@ function osToRow(o) {
   ];
 }
 
+// ── Helper: monta URL com query params para GET
+function scriptGet(action, data) {
+  let url = state.scriptUrl + '?action=' + encodeURIComponent(action);
+  if (data !== undefined) {
+    url += '&data=' + encodeURIComponent(JSON.stringify(data));
+  }
+  return fetch(url).then(r => r.json());
+}
+
 async function syncSheets() {
   if (!state.scriptUrl) {
     toast('Configure a URL da API do Apps Script primeiro', 'error');
@@ -1303,14 +1312,7 @@ async function syncSheets() {
   const dot = document.getElementById('syncDot');
   dot.classList.add('syncing');
   try {
-    const res = await fetch(state.scriptUrl, {
-      method: 'POST',
-      mode: 'cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'read' })
-    });
-    if (!res.ok) throw new Error('Falha na API: ' + res.status);
-    const data = await res.json();
+    const data = await scriptGet('read');
     if (data.status === 'error') throw new Error(data.message);
     const rows = data.values || [];
     // Converte linhas em objetos
@@ -1358,17 +1360,7 @@ function parseDataBR(s) {
 async function appendToSheet(o) {
   try {
     if (!state.scriptUrl) throw new Error('URL da API não configurada');
-    const res = await fetch(state.scriptUrl, {
-      method: 'POST',
-      mode: 'cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'append',
-        row: osToRow(o)
-      })
-    });
-    if (!res.ok) throw new Error('Erro HTTP ' + res.status);
-    const data = await res.json();
+    const data = await scriptGet('append', osToRow(o));
     if (data.status !== 'success') throw new Error(data.message || 'Erro desconhecido');
     toast(`O.S. Nº ${fmtNum(o.num)} salva na planilha ✅`, 'success');
   } catch (err) {
@@ -1379,17 +1371,7 @@ async function appendToSheet(o) {
 async function updateSheetRow(localIdx, o) {
   try {
     if (!state.scriptUrl) throw new Error('URL da API não configurada');
-    const res = await fetch(state.scriptUrl, {
-      method: 'POST',
-      mode: 'cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'update',
-        row: osToRow(o)
-      })
-    });
-    if (!res.ok) throw new Error('Erro HTTP ' + res.status);
-    const data = await res.json();
+    const data = await scriptGet('update', osToRow(o));
     if (data.status !== 'success') throw new Error(data.message || 'Erro de atualização');
     toast(`O.S. Nº ${fmtNum(o.num)} atualizada na planilha ✅`, 'success');
   } catch (err) {
@@ -1412,14 +1394,7 @@ async function testarConexao() {
   el.style.color = 'var(--cinza-400)';
   try {
     if (!state.scriptUrl) throw new Error('A URL da API está vazia.');
-    const res = await fetch(state.scriptUrl, {
-      method: 'POST',
-      mode: 'cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'read' })
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
+    const data = await scriptGet('read');
     if (data.status === 'error') throw new Error(data.message);
     el.textContent = `✅ Conectado com sucesso!`;
     el.style.color = 'var(--verde-esc)';
