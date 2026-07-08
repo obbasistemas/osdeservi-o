@@ -1130,9 +1130,11 @@ function limparForm() {
   initNovaOS();
 }
 function salvarOS() {
+  console.log('[App] salvarOS foi chamada');
   const tipo       = document.getElementById('fTipo').value;
   const solicitante= document.getElementById('fSolicitante').value.trim();
   const descricao  = document.getElementById('fDescricao').value.trim();
+  console.log('[App] Valores lidos:', { tipo, solicitante, descricao });
   if (!tipo)        { toast('Selecione o tipo de serviço', 'error'); return; }
   if (!solicitante) { toast('Informe o solicitante', 'error'); return; }
   if (!descricao)   { toast('Informe a descrição do serviço', 'error'); return; }
@@ -1150,14 +1152,18 @@ function salvarOS() {
     obs:         document.getElementById('fObs').value.trim(),
     responsavel: document.getElementById('fResponsavel').value.trim(),
   };
+  console.log('[App] Novo objeto OS gerado:', nova);
 
   state.ordens.push(nova);
   atualizarUI();
 
+  console.log('[App] Conexão ativa (state.connected):', state.connected);
   // Salva na planilha se conectado
   if (state.connected) {
+    console.log('[App] Chamando appendToSheet...');
     appendToSheet(nova);
   } else {
+    console.log('[App] Modo local, mostrando toast...');
     toast(`O.S. Nº ${fmtNum(nova.num)} criada (modo local)`, 'success');
   }
 
@@ -1300,7 +1306,17 @@ function scriptGet(action, data) {
   if (data !== undefined) {
     url += '&data=' + encodeURIComponent(JSON.stringify(data));
   }
-  return fetch(url).then(r => r.json());
+  console.log(`[AppsScript] Enviando GET para ação: ${action}, URL: ${url}`);
+  return fetch(url)
+    .then(r => {
+      console.log(`[AppsScript] Resposta recebida da ação ${action}:`, r);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(res => {
+      console.log(`[AppsScript] Resposta JSON parseada da ação ${action}:`, res);
+      return res;
+    });
 }
 
 async function syncSheets() {
@@ -1358,12 +1374,15 @@ function parseDataBR(s) {
 }
 
 async function appendToSheet(o) {
+  console.log('[AppsScript] appendToSheet iniciada para OS:', o);
   try {
     if (!state.scriptUrl) throw new Error('URL da API não configurada');
     const data = await scriptGet('append', osToRow(o));
+    console.log('[AppsScript] Resposta do append:', data);
     if (data.status !== 'success') throw new Error(data.message || 'Erro desconhecido');
     toast(`O.S. Nº ${fmtNum(o.num)} salva na planilha ✅`, 'success');
   } catch (err) {
+    console.error('[AppsScript] Erro ao executar appendToSheet:', err);
     toast('Erro ao salvar na planilha: ' + err.message, 'error');
   }
 }
