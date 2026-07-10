@@ -602,26 +602,37 @@
     .recentes-table thead {
       display: none;
     }
+    .registro-table thead {
+      display: none;
+    }
     .recentes-table,
     .recentes-table tbody,
     .recentes-table tr,
-    .recentes-table td {
+    .recentes-table td,
+    .registro-table,
+    .registro-table tbody,
+    .registro-table tr,
+    .registro-table td {
       display: block;
       width: 100%;
     }
-    .recentes-table tr {
+    .recentes-table tr,
+    .registro-table tr {
       padding: 12px 14px;
+      background: var(--branco);
     }
-    .recentes-table td {
-      display: flex;
+    .recentes-table td,
+    .registro-table td {
+      display: grid;
+      grid-template-columns: 86px minmax(0, 1fr);
       align-items: flex-start;
-      justify-content: space-between;
       gap: 12px;
       padding: 6px 0;
       border: none;
       font-size: 12px;
     }
-    .recentes-table td::before {
+    .recentes-table td::before,
+    .registro-table td::before {
       content: attr(data-label);
       color: var(--cinza-400);
       font-size: 10px;
@@ -631,9 +642,26 @@
       flex-shrink: 0;
     }
     .recentes-table td > span,
-    .recentes-table td > div {
-      text-align: right;
+    .recentes-table td > div,
+    .registro-table td > span,
+    .registro-table td > div {
+      text-align: left;
       min-width: 0;
+    }
+    .recentes-table .td-num,
+    .registro-table .td-num {
+      font-size: 14px;
+    }
+    .registro-table td[data-label="Descrição"] > span,
+    .recentes-table td[data-label="Tipo"] > span {
+      line-height: 1.45;
+    }
+    .registro-table td[data-label="Ação"] > span {
+      display: inline-flex;
+      justify-content: flex-start;
+    }
+    .registro-table .btn {
+      width: auto;
     }
   }
 
@@ -1007,7 +1035,7 @@
             <option>Outros Serviços</option>
           </select>
         </div>
-        <table>
+        <table class="registro-table">
           <thead>
             <tr>
               <th>Nº</th><th>Data</th><th>Tipo</th><th>Descrição</th>
@@ -1421,14 +1449,14 @@ function renderTabela(filtro) {
   tbody.innerHTML = ordens.map(o => {
     const idx = state.ordens.findIndex(x => x.num === o.num);
     return `<tr onclick="abrirModal(${idx})">
-      <td class="td-num">${fmtNum(o.num)}</td>
-      <td>${fmtData(o.data)}</td>
-      <td style="font-size:12px">${o.tipo}</td>
-      <td style="font-size:12px;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.descricao}</td>
-      <td>${o.solicitante}</td>
-      <td>${prioHtml(o.prioridade)}</td>
-      <td>${chipStatus(o.status)}</td>
-      <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();abrirModal(${idx})">Ver →</button></td>
+      <td class="td-num" data-label="Nº"><span>${fmtNum(o.num)}</span></td>
+      <td data-label="Data"><span>${fmtData(o.data)}</span></td>
+      <td data-label="Tipo"><span style="font-size:12px">${o.tipo}</span></td>
+      <td data-label="Descrição"><span style="font-size:12px">${o.descricao}</span></td>
+      <td data-label="Solicitante"><span>${o.solicitante}</span></td>
+      <td data-label="Prioridade"><span>${prioHtml(o.prioridade)}</span></td>
+      <td data-label="Status"><span>${chipStatus(o.status)}</span></td>
+      <td data-label="Ação"><span><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();abrirModal(${idx})">Ver →</button></span></td>
     </tr>`;
   }).join('');
 }
