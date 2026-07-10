@@ -51,6 +51,7 @@
     box-shadow: 0 2px 8px rgba(0,0,0,.25);
   }
   .topbar-brand { display: flex; align-items: center; gap: 10px; }
+  .topbar-brand > div:last-child { min-width: 0; }
   .topbar-brand .logo {
     width: 36px; height: 36px;
     background: var(--verde-vivo);
@@ -72,6 +73,7 @@
     transition: background .2s;
   }
   .badge-user:hover { background: rgba(255,255,255,.25); }
+  .badge-user, .btn-sync { white-space: nowrap; }
   .btn-sync {
     background: var(--verde-vivo);
     color: #fff;
@@ -195,6 +197,11 @@
     display: flex; align-items: center; gap: 10px;
     padding: 14px 18px;
     border-bottom: 1px solid #F0F0F0;
+  }
+  .table-toolbar-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--cinza-900);
   }
   .search-box {
     flex: 1;
@@ -523,8 +530,56 @@
 
   /* ── RESPONSIVE ── */
   @media (max-width: 700px) {
+    .topbar {
+      height: auto;
+      padding: 10px 12px;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+    }
+    .topbar-brand {
+      width: 100%;
+      align-items: center;
+    }
+    .topbar-brand h1 {
+      font-size: 14px;
+    }
+    .topbar-brand span {
+      font-size: 10px;
+    }
+    .topbar-right {
+      width: 100%;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: nowrap;
+    }
+    .btn-sync {
+      flex: 1;
+      min-width: 0;
+      justify-content: center;
+      padding: 8px 10px;
+      font-size: 11px;
+    }
+    .badge-user {
+      max-width: 42%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: center;
+      padding: 8px 10px;
+      font-size: 11px;
+    }
     .sidebar { display: none; }
     .main { padding: 16px 16px 92px; }
+    .table-toolbar {
+      flex-wrap: wrap;
+      align-items: stretch;
+    }
+    .table-toolbar-title {
+      width: 100%;
+    }
+    .table-toolbar .btn {
+      width: 100%;
+    }
     .tipos-grid { grid-template-columns: repeat(2, 1fr); }
     .form-row { flex-direction: column; }
     .cards-grid { grid-template-columns: repeat(2, 1fr); }
@@ -543,6 +598,42 @@
     }
     .mobile-bottom-nav {
       display: flex;
+    }
+    .recentes-table thead {
+      display: none;
+    }
+    .recentes-table,
+    .recentes-table tbody,
+    .recentes-table tr,
+    .recentes-table td {
+      display: block;
+      width: 100%;
+    }
+    .recentes-table tr {
+      padding: 12px 14px;
+    }
+    .recentes-table td {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 6px 0;
+      border: none;
+      font-size: 12px;
+    }
+    .recentes-table td::before {
+      content: attr(data-label);
+      color: var(--cinza-400);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      flex-shrink: 0;
+    }
+    .recentes-table td > span,
+    .recentes-table td > div {
+      text-align: right;
+      min-width: 0;
     }
   }
 
@@ -739,10 +830,10 @@
       <!-- Recentes -->
       <div class="table-wrap">
         <div class="table-toolbar">
-          <span style="font-size:14px;font-weight:700;color:var(--cinza-900)">Ordens Recentes</span>
+          <span class="table-toolbar-title">Ordens Recentes</span>
           <button class="btn btn-ghost btn-sm" onclick="navigate('registro')" style="margin-left:auto">Ver todas →</button>
         </div>
-        <table>
+        <table class="recentes-table">
           <thead>
             <tr>
               <th>Nº</th><th>Data</th><th>Tipo</th><th>Solicitante</th><th>Prioridade</th><th>Status</th>
@@ -1104,6 +1195,7 @@ function doLogin() {
   document.getElementById('cfgPerfil').value = perfilSel === 'sindico' ? '👑 Síndico' :
                                                perfilSel === 'zelador' ? '🔧 Zelador' : '🚪 Porteiro';
   document.getElementById('cfgScriptUrl').value = state.scriptUrl;
+  syncResponsiveUI();
 
   // Ocultar cancelar OS se não for síndico
   if (perfilSel !== 'sindico') {
@@ -1124,6 +1216,7 @@ function sair() {
 //  NAVEGAÇÃO
 // ══════════════════════════════════════════
 function navigate(page) {
+  syncResponsiveUI();
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.querySelectorAll('.mobile-nav-item').forEach(n => n.classList.remove('active'));
@@ -1140,6 +1233,14 @@ function navigate(page) {
 // ══════════════════════════════════════════
 //  UTILS
 // ══════════════════════════════════════════
+function syncResponsiveUI() {
+  const mobileNav = document.getElementById('mobileBottomNav');
+  const isMobile = window.innerWidth <= 700;
+  const loggedIn = !!state.user;
+  if (mobileNav) {
+    mobileNav.style.display = isMobile && loggedIn ? 'flex' : 'none';
+  }
+}
 function proximoNum() {
   if (!state.ordens.length) return 1;
   return Math.max(...state.ordens.map(o => o.num)) + 1;
@@ -1218,12 +1319,12 @@ function renderDashboard() {
   }
   tbody.innerHTML = recentes.map((o,i) => `
     <tr onclick="abrirModal(${state.ordens.length - 1 - i})">
-      <td class="td-num">${fmtNum(o.num)}</td>
-      <td>${fmtData(o.data)}</td>
-      <td>${o.tipo}</td>
-      <td>${o.solicitante}</td>
-      <td>${prioHtml(o.prioridade)}</td>
-      <td>${chipStatus(o.status)}</td>
+      <td class="td-num" data-label="Nº"><span>${fmtNum(o.num)}</span></td>
+      <td data-label="Data"><span>${fmtData(o.data)}</span></td>
+      <td data-label="Tipo"><span>${o.tipo}</span></td>
+      <td data-label="Solicitante"><span>${o.solicitante}</span></td>
+      <td data-label="Prioridade"><span>${prioHtml(o.prioridade)}</span></td>
+      <td data-label="Status"><span>${chipStatus(o.status)}</span></td>
     </tr>`).join('');
 }
 
@@ -1566,6 +1667,8 @@ function toast(msg, type = '') {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') fecharModal();
 });
+window.addEventListener('resize', syncResponsiveUI);
+syncResponsiveUI();
 </script>
 </body>
 </html>
