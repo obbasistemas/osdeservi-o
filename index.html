@@ -139,8 +139,18 @@
     display: flex; align-items: center; justify-content: space-between;
     margin-bottom: 24px;
   }
+  .page-header-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
   .page-title { font-size: 22px; font-weight: 800; color: var(--cinza-900); }
   .page-sub { font-size: 13px; color: var(--cinza-400); margin-top: 2px; }
+  .btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
 
   /* ── CARDS RESUMO ── */
   .cards-grid {
@@ -514,15 +524,85 @@
   /* ── RESPONSIVE ── */
   @media (max-width: 700px) {
     .sidebar { display: none; }
-    .main { padding: 16px; }
+    .main { padding: 16px 16px 92px; }
     .tipos-grid { grid-template-columns: repeat(2, 1fr); }
     .form-row { flex-direction: column; }
     .cards-grid { grid-template-columns: repeat(2, 1fr); }
+    .page-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+    .page-header-left {
+      align-items: stretch;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .btn-back {
+      width: fit-content;
+    }
+    .mobile-bottom-nav {
+      display: flex;
+    }
   }
 
   /* ── SCREEN ── */
   .screen { display: none; }
   .screen.active { display: block; }
+
+  /* ── MOBILE NAV ── */
+  .mobile-bottom-nav {
+    display: none;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--branco);
+    border-top: 1px solid #E0E0E0;
+    box-shadow: 0 -4px 18px rgba(0,0,0,.08);
+    z-index: 150;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+    gap: 6px;
+  }
+  .mobile-nav-item {
+    flex: 1;
+    border: none;
+    background: transparent;
+    border-radius: 10px;
+    padding: 8px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: var(--cinza-400);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .15s;
+    position: relative;
+  }
+  .mobile-nav-item .icon {
+    font-size: 18px;
+    line-height: 1;
+  }
+  .mobile-nav-item.active {
+    background: var(--verde-bg);
+    color: var(--verde-esc);
+  }
+  .mobile-nav-badge {
+    position: absolute;
+    top: 4px;
+    right: 16px;
+    background: var(--vermelho);
+    color: #fff;
+    border-radius: 10px;
+    min-width: 18px;
+    padding: 1px 5px;
+    font-size: 10px;
+    font-weight: 800;
+    display: none;
+  }
 
   /* ── LOGIN ── */
   .login-overlay {
@@ -678,9 +758,12 @@
     <!-- ── NOVA O.S. ── -->
     <div class="screen" id="screen-nova">
       <div class="page-header">
-        <div>
-          <div class="page-title">Nova Ordem de Serviço</div>
-          <div class="page-sub">Preencha os campos abaixo e salve para registrar na planilha</div>
+        <div class="page-header-left">
+          <button class="btn btn-ghost btn-sm btn-back" onclick="navigate('dashboard')">← Voltar</button>
+          <div>
+            <div class="page-title">Nova Ordem de Serviço</div>
+            <div class="page-sub">Preencha os campos abaixo e salve para registrar na planilha</div>
+          </div>
         </div>
       </div>
 
@@ -797,9 +880,12 @@
     <!-- ── REGISTRO ── -->
     <div class="screen" id="screen-registro">
       <div class="page-header">
-        <div>
-          <div class="page-title">Registro de Ordens</div>
-          <div class="page-sub">Todas as O.S. armazenadas na planilha do Google Drive</div>
+        <div class="page-header-left">
+          <button class="btn btn-ghost btn-sm btn-back" onclick="navigate('dashboard')">← Voltar</button>
+          <div>
+            <div class="page-title">Registro de Ordens</div>
+            <div class="page-sub">Todas as O.S. armazenadas na planilha do Google Drive</div>
+          </div>
         </div>
         <button class="btn btn-primary btn-sm" onclick="navigate('nova')">+ Nova O.S.</button>
       </div>
@@ -847,9 +933,12 @@
     <!-- ── CONFIG ── -->
     <div class="screen" id="screen-config">
       <div class="page-header">
-        <div>
-          <div class="page-title">Configuração</div>
-          <div class="page-sub">Conecte o app à sua planilha no Google Drive</div>
+        <div class="page-header-left">
+          <button class="btn btn-ghost btn-sm btn-back" onclick="navigate('dashboard')">← Voltar</button>
+          <div>
+            <div class="page-title">Configuração</div>
+            <div class="page-sub">Conecte o app à sua planilha no Google Drive</div>
+          </div>
         </div>
       </div>
 
@@ -903,6 +992,27 @@
 
   </main>
 </div>
+
+<!-- ══ NAVEGAÇÃO MOBILE ══ -->
+<nav class="mobile-bottom-nav" id="mobileBottomNav">
+  <button class="mobile-nav-item active" id="mnav-dashboard" onclick="navigate('dashboard')">
+    <span class="icon">📊</span>
+    <span>Painel</span>
+  </button>
+  <button class="mobile-nav-item" id="mnav-nova" onclick="navigate('nova')">
+    <span class="icon">➕</span>
+    <span>Nova O.S.</span>
+  </button>
+  <button class="mobile-nav-item" id="mnav-registro" onclick="navigate('registro')">
+    <span class="icon">📋</span>
+    <span>Registro</span>
+    <span class="mobile-nav-badge" id="mobileBadgeAbertas">0</span>
+  </button>
+  <button class="mobile-nav-item" id="mnav-config" onclick="navigate('config')">
+    <span class="icon">⚙️</span>
+    <span>Ajustes</span>
+  </button>
+</nav>
 
 <!-- ══ MODAL VER/EDITAR OS ══ -->
 <div class="modal-overlay" id="modalOverlay" onclick="fecharModal(event)">
@@ -1016,9 +1126,12 @@ function sair() {
 function navigate(page) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.mobile-nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('screen-' + page).classList.add('active');
   const nav = document.getElementById('nav-' + page);
   if (nav) nav.classList.add('active');
+  const mobileNav = document.getElementById('mnav-' + page);
+  if (mobileNav) mobileNav.classList.add('active');
   if (page === 'nova')      initNovaOS();
   if (page === 'registro')  renderTabela();
   if (page === 'dashboard') renderDashboard();
@@ -1078,6 +1191,16 @@ function atualizarUI() {
   const badge = document.getElementById('badgeAbertas');
   if (abertas > 0) { badge.style.display = ''; badge.textContent = abertas; }
   else { badge.style.display = 'none'; }
+
+  const mobileBadge = document.getElementById('mobileBadgeAbertas');
+  if (mobileBadge) {
+    if (abertas > 0) {
+      mobileBadge.style.display = 'inline-block';
+      mobileBadge.textContent = abertas;
+    } else {
+      mobileBadge.style.display = 'none';
+    }
+  }
 }
 
 function renderDashboard() {
